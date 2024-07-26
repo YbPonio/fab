@@ -5,8 +5,12 @@ class Api {
     this.apiUrl = "http://127.0.0.1:8000/api/";
     this.apiName = apiName;
   }
-  getAll() {
+  get() {
     return axios.get(this.apiUrl + this.apiName);
+  }
+
+  getById(id) {
+    return axios.get(`${this.apiUrl}${this.apiName}/${id}`);
   }
 
   create(entity) {
@@ -15,6 +19,9 @@ class Api {
 
   delete(id) {
     return axios.delete(this.apiUrl + this.apiName + "/" + id);
+  }
+  update(product) {
+    return axios.patch(this.apiUrl + this.apiName + "/" + product.id, product);
   }
 }
 

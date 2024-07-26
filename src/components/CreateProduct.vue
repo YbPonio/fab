@@ -1,4 +1,5 @@
 <template>
+  <h1>DogName: {{ appStore.dogName }}</h1>
   <v-container>
     <v-col>
       <v-form>
@@ -15,16 +16,21 @@
           type="number"
         ></v-text-field>
         <v-text-field v-model="entity.image" label="Image URL"></v-text-field>
-        <v-text-field
+
+        <v-select
           v-model="entity.store_id"
-          label="Store ID"
-          type="number"
-        ></v-text-field>
-        <v-text-field
+          label="Store"
+          :items="stores"
+          item-value="id"
+        ></v-select>
+        <v-select
           v-model="entity.category_id"
-          label="Category ID"
-          type="number"
-        ></v-text-field>
+          label="Category"
+          :items="categories"
+          item-value="id"
+          item-text="title"
+        ></v-select>
+
         <v-btn @click="submitForm">Submit</v-btn>
       </v-form>
     </v-col>
@@ -41,7 +47,7 @@
         </thead>
 
         <tbody>
-          <tr v-for="product in products" :key="product.id">
+          <tr v-for="product in appStore.products" :key="product.id">
             <td>{{ product.code }}</td>
             <td>{{ product.name }}</td>
             <td>{{ product.price }}</td>
@@ -50,7 +56,8 @@
             <td>{{ product.store.title }}</td>
             <td>{{ product.category.title }}</td>
             <td>
-              <v-btn @click="deleteProduct">Delete</v-btn>
+              <v-btn @click="editProduct(product)">Edit</v-btn>
+              <v-btn @click="deleteProduct(product)">Delete</v-btn>
             </td>
           </tr>
         </tbody>
@@ -62,18 +69,23 @@
 <script setup>
 import api from "@/helpers/api";
 import { onMounted, ref } from "vue";
+import { ca } from "vuetify/locale";
+import { useAppStore } from "@/stores/app";
+
+let appStore = useAppStore();
 
 let entity = ref({
+  id: 0,
   code: "",
   name: "",
-  price: 0,
-  qty: 0,
+  price: "",
+  qty: "",
   image: "",
-  store_id: 1,
-  category_id: 1,
+  store_id: "",
+  category_id: "",
 });
-
-let products = ref([]);
+let stores = ref([]);
+let categories = ref([]);
 let headers = ref([
   "Code",
   "Name",
@@ -85,14 +97,41 @@ let headers = ref([
 ]);
 
 onMounted(async function () {
-  products.value = (await api.product.getAll()).data;
+  stores.value = (await api.store.get()).data;
+  categories.value = (await api.category.get()).data;
+  refresh();
 });
 
-function submitForm() {
-  api.product.create(entity.value);
+async function refresh() {
+  appStore.products = (await api.product.get()).data;
 }
 
-function deleteProduct() {
-  api.product.delete();
+async function submitForm() {
+  if (entity.value.id) {
+    await api.product.update(entity.value);
+  } else {
+    await api.product.create(entity.value);
+  }
+  entity.value = {
+    id: "",
+    code: "",
+    name: "",
+    price: "",
+    qty: "",
+    image: "",
+    store_id: "",
+    category_id: "",
+  };
+  refresh();
+}
+
+async function editProduct(product) {
+  entity.value = (await api.product.getById(product.id)).data;
+  console.log(entity.value);
+}
+
+async function deleteProduct(product) {
+  await api.product.delete(product.id);
+  refresh();
 }
 </script>
