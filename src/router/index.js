@@ -11,7 +11,14 @@ import { routes } from 'vue-router/auto-routes'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: setupLayouts(routes),
+  routes: [
+    ...setupLayouts(routes),
+    {
+      path: '/tor',
+      name: 'Home',
+      component: () => import('../components/sis/reports/TorReport.vue')
+    }
+  ],
 })
 
 // Workaround for https://github.com/vitejs/vite/issues/11804
