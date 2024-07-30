@@ -5,31 +5,13 @@
       <v-form>
         <v-text-field v-model="entity.code" label="Code"></v-text-field>
         <v-text-field v-model="entity.name" label="Name"></v-text-field>
-        <v-text-field
-          v-model="entity.price"
-          label="Price"
-          type="number"
-        ></v-text-field>
-        <v-text-field
-          v-model="entity.qty"
-          label="Quantity"
-          type="number"
-        ></v-text-field>
+        <v-text-field v-model="entity.price" label="Price" type="number"></v-text-field>
+        <v-text-field v-model="entity.qty" label="Quantity" type="number"></v-text-field>
         <v-text-field v-model="entity.image" label="Image URL"></v-text-field>
 
-        <v-select
-          v-model="entity.store_id"
-          label="Store"
-          :items="stores"
-          item-value="id"
-        ></v-select>
-        <v-select
-          v-model="entity.category_id"
-          label="Category"
-          :items="categories"
-          item-value="id"
-          item-text="title"
-        ></v-select>
+        <v-select v-model="entity.store_id" label="Store" :items="stores" item-value="id"></v-select>
+        <v-select v-model="entity.category_id" label="Category" :items="categories" item-value="id"
+          item-text="title"></v-select>
 
         <v-btn @click="submitForm">Submit</v-btn>
       </v-form>
@@ -37,7 +19,7 @@
 
     <v-col>
       <v-table>
-        <thead>
+        <thead class="tableHeader">
           <tr>
             <th v-for="header in headers" :key="header">
               {{ header }}
@@ -63,19 +45,25 @@
         </tbody>
       </v-table>
     </v-col>
+    <v-col>
+      <v-btn :disabled="paginationStore.currentPage == 1"> Previous </v-btn>
+      <v-btn :disabled="paginationStore.currentPage == paginationStore.totalPages"> Next </v-btn>
+      Page {{ paginationStore.currentPage }} of {{ paginationStore.totalPages }}
+    </v-col>
   </v-container>
 </template>
 
 <script setup>
 import api from "@/helpers/api";
-import { onMounted, ref } from "vue";
-import { ca } from "vuetify/locale";
+import { computed, onMounted, ref } from "vue";
 import { useAppStore } from "@/stores/app";
+import { usePaginationStore } from "@/stores/pagination";
 
 let appStore = useAppStore();
+let paginationStore = usePaginationStore();
 
 let entity = ref({
-  id: 0,
+  id: "",
   code: "",
   name: "",
   price: "",
@@ -127,11 +115,28 @@ async function submitForm() {
 
 async function editProduct(product) {
   entity.value = (await api.product.getById(product.id)).data;
-  console.log(entity.value);
 }
 
 async function deleteProduct(product) {
   await api.product.delete(product.id);
   refresh();
 }
+
+function nextPage() {
+  if (paginationStore.currentPage < paginationStore.totalPages) {
+    paginationStore.currentPage++;
+  }
+}
+
+function prevPage() {
+  if (paginationStore.currentPage > 1) {
+    paginationStore.currentPage--;
+  }
+}
 </script>
+
+<style scoped>
+.tableHeader th:last-child {
+  text-align: center;
+}
+</style>
